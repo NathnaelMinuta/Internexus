@@ -4,8 +4,8 @@ import { Inter } from 'next/font/google'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
-  title: 'Task Progress Tracker | Nathnael Minuta',
-  description: 'Personal task and progress tracking dashboard for Nathnael Minuta\'s internship',
+  title: 'Internexus | Your Central Hub for Growth and Impact',
+  description: 'Transform your internship experience with an intelligent task and progress management platform designed for ambitious interns.',
 }
 
 export default function RootLayout({
@@ -22,7 +22,8 @@ export default function RootLayout({
               <div className="flex justify-between h-16">
                 <div className="flex items-center">
                   <div className="flex-shrink-0 flex items-center">
-                    <h1 className="text-xl font-bold">Nathnael Minuta</h1>
+                    <h1 className="text-xl font-bold">Internexus</h1>
+                    <span className="ml-2 text-sm text-gray-300">| Nathnael Minuta</span>
                   </div>
                   <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
                     <a href="/" className="border-white text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
@@ -39,9 +40,9 @@ export default function RootLayout({
                     </a>
                   </div>
                 </div>
-                <div className="flex items-center">
+                <div className="flex items-center space-x-4">
                   <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-accent text-white">
-                    Intern
+                    Salesforce Intern
                   </span>
                 </div>
               </div>
