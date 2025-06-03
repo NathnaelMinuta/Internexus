@@ -167,16 +167,17 @@ export default function Dashboard() {
         return `${emoji} ${title}`;
       }
     }
-    return `�� ${title}`;
+    return `📌 ${title}`;
   };
 
-  // Handle drag end for reordering tasks
   const onDragEnd = (result: DropResult) => {
     if (!result.destination) return;
-    const reordered = Array.from(tasks);
-    const [removed] = reordered.splice(result.source.index, 1);
-    reordered.splice(result.destination.index, 0, removed);
-    setTasks(reordered);
+
+    const items = Array.from(tasks);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+
+    setTasks(items);
   };
 
   return (

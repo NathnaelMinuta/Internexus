@@ -1,13 +1,13 @@
-import './globals.css'
 import { Inter } from 'next/font/google'
 import { ThemeProvider } from 'next-themes'
 import NavBar from '@/components/NavBar'
+import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
-  title: 'Internexus | Your Central Hub for Growth and Impact',
-  description: 'Transform your internship experience with an intelligent task and progress management platform designed for ambitious interns.',
+  title: 'Internexus - Internship Task Tracker',
+  description: 'A dashboard for tracking internship tasks and events',
 }
 
 export default function RootLayout({

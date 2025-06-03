@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useLocalStorage } from '@/utils/useLocalStorage';
-import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable, Draggable, DropResult, DroppableProvided, DraggableProvided, DraggableStateSnapshot } from '@hello-pangea/dnd';
+import type { ReactNode } from 'react';
 
 interface Project {
   id: string;
@@ -65,13 +66,14 @@ export default function Projects() {
     }
   };
 
-  // Handle drag end for reordering projects
   const onDragEnd = (result: DropResult) => {
     if (!result.destination) return;
-    const reordered = Array.from(projects);
-    const [removed] = reordered.splice(result.source.index, 1);
-    reordered.splice(result.destination.index, 0, removed);
-    setProjects(reordered);
+
+    const items = Array.from(projects);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+
+    setProjects(items);
   };
 
   return (
@@ -79,63 +81,34 @@ export default function Projects() {
       {/* Projects Header */}
       <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-200">
         <h2 className="text-2xl font-bold text-text-primary">Projects</h2>
-        <p className="mt-1 text-text-secondary">Manage and track your internship projects.</p>
+        <p className="mt-1 text-text-secondary">Track your internship projects and their progress.</p>
       </div>
 
-      {/* Projects List */}
+      {/* Projects Grid */}
       <DragDropContext onDragEnd={onDragEnd}>
-        <Droppable droppableId="projectList" direction="horizontal">
-          {(provided) => (
-            <div
-              className="flex flex-wrap gap-6"
-              ref={provided.innerRef}
-              {...provided.droppableProps}
-            >
+        <Droppable droppableId="projectList">
+          {(provided: DroppableProvided): ReactNode => (
+            <div {...provided.droppableProps} ref={provided.innerRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {projects.map((project, index) => (
                 <Draggable key={project.id} draggableId={project.id} index={index}>
-                  {(provided, snapshot) => (
+                  {(provided: DraggableProvided, snapshot: DraggableStateSnapshot): ReactNode => (
                     <div
                       ref={provided.innerRef}
                       {...provided.draggableProps}
                       {...provided.dragHandleProps}
                       className={`bg-white shadow-lg rounded-lg p-6 border border-gray-200 transition-shadow ${snapshot.isDragging ? 'shadow-2xl' : ''}`}
-                      style={{ minWidth: '300px', maxWidth: '350px', marginBottom: '0.5rem', ...provided.draggableProps.style }}
                     >
-                      <div className="flex justify-between items-start">
-                        <h3 className="text-lg font-semibold text-text-primary">{project.title}</h3>
-                        <span className={`px-2 py-1 text-white text-sm rounded-full ${
-                          project.status === 'Not Started' ? 'bg-danger' :
-                          project.status === 'In Progress' ? 'bg-warning' :
-                          'bg-success'
-                        }`}>{project.status}</span>
-                      </div>
-                      <p className="mt-2 text-text-secondary">{project.description}</p>
-                      <span className="text-sm text-text-muted">Due: {new Date(project.dueDate).toLocaleDateString()}</span>
-                      <div className="flex space-x-2">
-                        <button 
-                          onClick={() => {
-                            setSelectedProject(project);
-                            setShowViewProject(true);
-                          }}
-                          className="text-primary hover:text-secondary"
-                        >
-                          View Details
-                        </button>
-                        <button 
-                          onClick={() => {
-                            setSelectedProject(project);
-                            setShowEditProject(true);
-                          }}
-                          className="text-warning hover:text-warning-dark"
-                        >
-                          Edit
-                        </button>
-                        <button 
-                          onClick={() => deleteProject(project.id)}
-                          className="text-danger hover:text-danger-dark"
-                        >
-                          Delete
-                        </button>
+                      <h3 className="text-lg font-semibold text-text-primary">{project.title}</h3>
+                      <p className="text-text-secondary mt-2">{project.description}</p>
+                      <div className="mt-4 flex justify-between items-center">
+                        <span className="text-sm text-text-muted">Due: {new Date(project.dueDate).toLocaleDateString()}</span>
+                        <span className={`px-2 py-1 rounded-full text-xs ${
+                          project.status === 'Completed' ? 'bg-success text-white' :
+                          project.status === 'In Progress' ? 'bg-warning text-white' :
+                          'bg-danger text-white'
+                        }`}>
+                          {project.status}
+                        </span>
                       </div>
                     </div>
                   )}
