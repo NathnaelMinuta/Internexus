@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-interface Notification {
+export interface Notification {
   id: string;
   message: string;
   type: 'info' | 'warning' | 'danger';
@@ -14,10 +14,10 @@ export function useNotifications() {
   const addNotification = (notification: Omit<Notification, 'id'>) => {
     const id = Date.now().toString();
     setNotifications(prev => [...prev, { ...notification, id }]);
-    
-    // Auto-remove notification after 5 seconds
+
+    // Auto-dismiss after 5 seconds
     setTimeout(() => {
-      setNotifications(prev => prev.filter(n => n.id !== id));
+      removeNotification(id);
     }, 5000);
   };
 

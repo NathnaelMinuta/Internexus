@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Notifications, { useNotifications } from '@/components/Notifications';
+import { useLocalStorage } from '@/utils/useLocalStorage';
 
 interface Task {
   id: string;
@@ -16,7 +17,7 @@ interface Task {
 export default function Dashboard() {
   const [showAddTask, setShowAddTask] = useState(false);
   const { notifications, addNotification, removeNotification } = useNotifications();
-  const [tasks, setTasks] = useState<Task[]>([
+  const [tasks, setTasks] = useLocalStorage<Task[]>('tasks', [
     {
       id: '1',
       title: 'Project Documentation',
@@ -27,6 +28,30 @@ export default function Dashboard() {
       project: 'Sprint 1'
     }
   ]);
+
+  const [selectedProject, setSelectedProject] = useState<string>('All Projects');
+  const [selectedPriority, setSelectedPriority] = useState<string>('All Priorities');
+
+  // Calculate task counts
+  const taskCounts = {
+    dueToday: tasks.filter(task => {
+      const today = new Date();
+      const dueDate = new Date(task.dueDate);
+      return dueDate.toDateString() === today.toDateString() && task.status !== 'Completed';
+    }).length,
+    inProgress: tasks.filter(task => task.status === 'In Progress').length,
+    completed: tasks.filter(task => task.status === 'Completed').length
+  };
+
+  // Filter tasks based on selected project and priority
+  const filteredTasks = tasks.filter(task => {
+    const matchesProject = selectedProject === 'All Projects' || task.project === selectedProject;
+    const matchesPriority = selectedPriority === 'All Priorities' || task.priority === selectedPriority;
+    return matchesProject && matchesPriority;
+  });
+
+  // Get unique project names for filter dropdown
+  const projectOptions = ['All Projects', ...Array.from(new Set(tasks.map(task => task.project).filter(Boolean)))];
 
   // Check for upcoming deadlines
   useEffect(() => {
@@ -65,11 +90,33 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, [tasks, addNotification]);
 
-  const addTask = (task: Task) => {
-    setTasks([...tasks, task]);
+  const addTask = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const newTask: Task = {
+      id: Date.now().toString(),
+      title: formData.get('title') as string,
+      description: formData.get('description') as string || '',
+      dueDate: formData.get('dueDate') as string,
+      priority: formData.get('priority') as Task['priority'],
+      status: 'Not Started',
+      project: formData.get('project') as string || undefined
+    };
+    setTasks([...tasks, newTask]);
     setShowAddTask(false);
     addNotification({
       message: 'New task added successfully!',
+      type: 'info'
+    });
+  };
+
+  const updateTaskStatus = (taskId: string, newStatus: Task['status']) => {
+    const updatedTasks = tasks.map(task =>
+      task.id === taskId ? { ...task, status: newStatus } : task
+    );
+    setTasks(updatedTasks);
+    addNotification({
+      message: `Task status updated to ${newStatus}`,
       type: 'info'
     });
   };
@@ -89,15 +136,15 @@ export default function Dashboard() {
         <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-white shadow-lg rounded-lg p-4 border border-gray-200">
             <h3 className="text-lg font-semibold text-text-primary mb-2">Due Today</h3>
-            <p className="text-3xl font-bold text-danger">2</p>
+            <p className="text-3xl font-bold text-danger">{taskCounts.dueToday}</p>
           </div>
           <div className="bg-white shadow-lg rounded-lg p-4 border border-gray-200">
             <h3 className="text-lg font-semibold text-text-primary mb-2">In Progress</h3>
-            <p className="text-3xl font-bold text-warning">3</p>
+            <p className="text-3xl font-bold text-warning">{taskCounts.inProgress}</p>
           </div>
           <div className="bg-white shadow-lg rounded-lg p-4 border border-gray-200">
             <h3 className="text-lg font-semibold text-text-primary mb-2">Completed</h3>
-            <p className="text-3xl font-bold text-success">5</p>
+            <p className="text-3xl font-bold text-success">{taskCounts.completed}</p>
           </div>
         </div>
 
@@ -117,12 +164,20 @@ export default function Dashboard() {
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-xl font-bold text-text-primary">Current Tasks</h3>
           <div className="flex space-x-2">
-            <select className="border rounded-md px-2 py-1 text-sm text-text-secondary">
-              <option>All Projects</option>
-              <option>Sprint 1</option>
-              <option>Documentation</option>
+            <select 
+              className="border rounded-md px-2 py-1 text-sm text-text-secondary"
+              value={selectedProject}
+              onChange={(e) => setSelectedProject(e.target.value)}
+            >
+              {projectOptions.map(project => (
+                <option key={project} value={project}>{project}</option>
+              ))}
             </select>
-            <select className="border rounded-md px-2 py-1 text-sm text-text-secondary">
+            <select 
+              className="border rounded-md px-2 py-1 text-sm text-text-secondary"
+              value={selectedPriority}
+              onChange={(e) => setSelectedPriority(e.target.value)}
+            >
               <option>All Priorities</option>
               <option>High</option>
               <option>Medium</option>
@@ -132,7 +187,7 @@ export default function Dashboard() {
         </div>
         
         <div className="space-y-4">
-          {tasks.map(task => (
+          {filteredTasks.map(task => (
             <div key={task.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
               <div className="flex-1">
                 <div className="flex items-center space-x-2">
@@ -155,16 +210,11 @@ export default function Dashboard() {
                 <select
                   className="border rounded-md px-2 py-1 text-sm bg-white"
                   value={task.status}
-                  onChange={(e) => {
-                    const newTasks = tasks.map(t =>
-                      t.id === task.id ? { ...t, status: e.target.value as Task['status'] } : t
-                    );
-                    setTasks(newTasks);
-                  }}
+                  onChange={(e) => updateTaskStatus(task.id, e.target.value as Task['status'])}
                 >
-                  <option>Not Started</option>
-                  <option>In Progress</option>
-                  <option>Completed</option>
+                  <option value="Not Started">Not Started</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Completed">Completed</option>
                 </select>
               </div>
             </div>
@@ -177,19 +227,7 @@ export default function Dashboard() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
             <h3 className="text-lg font-bold text-text-primary mb-4">Add New Task</h3>
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              const formData = new FormData(e.currentTarget);
-              addTask({
-                id: Date.now().toString(),
-                title: formData.get('title') as string,
-                description: formData.get('description') as string,
-                dueDate: formData.get('dueDate') as string,
-                priority: formData.get('priority') as Task['priority'],
-                status: 'Not Started',
-                project: formData.get('project') as string,
-              });
-            }}>
+            <form onSubmit={addTask}>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-text-secondary mb-1">Title</label>
@@ -225,9 +263,9 @@ export default function Dashboard() {
                       className="w-full border rounded-md px-3 py-2"
                       required
                     >
-                      <option>High</option>
-                      <option>Medium</option>
-                      <option>Low</option>
+                      <option value="High">High</option>
+                      <option value="Medium">Medium</option>
+                      <option value="Low">Low</option>
                     </select>
                   </div>
                 </div>
