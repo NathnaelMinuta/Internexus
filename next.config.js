@@ -5,7 +5,8 @@ const nextConfig = {
     unoptimized: true,
   },
   basePath: '/Internexus',
-  assetPrefix: '/Internexus',
+  assetPrefix: '/Internexus/',
+  trailingSlash: true,
 }
 
 module.exports = nextConfig 

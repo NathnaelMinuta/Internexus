@@ -70,7 +70,7 @@ export default function Meetings() {
       startTime: formData.get('startTime') as string,
       endTime: formData.get('endTime') as string,
       status: formData.get('status') as Meeting['status'],
-      attendees: formData.get('attendees') as string
+      attendees: formData.get('attendees') as string || undefined
     };
 
     setMeetings(meetings.map(m => m.id === selectedMeeting.id ? updatedMeeting : m));

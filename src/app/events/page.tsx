@@ -51,17 +51,18 @@ export default function Events() {
   const addEvent = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
+    const maxParticipants = formData.get('maxParticipants');
     const newEvent: Event = {
       id: Date.now().toString(),
       title: formData.get('title') as string,
-      description: formData.get('description') as string,
+      description: formData.get('description') as string || '',
       date: formData.get('date') as string,
       startTime: formData.get('startTime') as string,
       endTime: formData.get('endTime') as string,
       type: formData.get('type') as Event['type'],
       location: formData.get('location') as string,
       registrationRequired: formData.get('registrationRequired') === 'true',
-      maxParticipants: formData.get('maxParticipants') ? parseInt(formData.get('maxParticipants') as string) : undefined
+      maxParticipants: maxParticipants && maxParticipants !== '' ? parseInt(maxParticipants as string) : undefined
     };
     setEvents([...events, newEvent]);
     setShowAddEvent(false);
@@ -72,17 +73,18 @@ export default function Events() {
     if (!selectedEvent) return;
     
     const formData = new FormData(e.currentTarget);
+    const maxParticipants = formData.get('maxParticipants');
     const updatedEvent: Event = {
       ...selectedEvent,
       title: formData.get('title') as string,
-      description: formData.get('description') as string,
+      description: formData.get('description') as string || '',
       date: formData.get('date') as string,
       startTime: formData.get('startTime') as string,
       endTime: formData.get('endTime') as string,
       type: formData.get('type') as Event['type'],
       location: formData.get('location') as string,
       registrationRequired: formData.get('registrationRequired') === 'true',
-      maxParticipants: formData.get('maxParticipants') ? parseInt(formData.get('maxParticipants') as string) : undefined
+      maxParticipants: maxParticipants && maxParticipants !== '' ? parseInt(maxParticipants as string) : undefined
     };
 
     setEvents(events.map(e => e.id === selectedEvent.id ? updatedEvent : e));
