@@ -2,6 +2,8 @@
 
 > Transform your internship experience with an intelligent task and progress management platform designed for ambitious interns.
 
+Last updated: March 25, 2024
+
 A modern, responsive dashboard that serves as your command center for managing internship tasks, projects, meetings, and professional growth milestones. Built with Next.js, TypeScript, and Tailwind CSS.
 
 ## 🌟 Vision
