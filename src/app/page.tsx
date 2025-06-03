@@ -5,7 +5,7 @@ import { useTheme } from 'next-themes';
 import Notifications, { useNotifications } from '@/components/Notifications';
 import { useLocalStorage } from '@/utils/useLocalStorage';
 import { FiSun, FiMoon } from 'react-icons/fi';
-import { DragDropContext, Droppable, Draggable, DropResult, DroppableProvided, DraggableProvided, DraggableStateSnapshot } from '@hello-pangea/dnd';
+import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import type { ReactNode } from 'react';
 
 interface Task {
@@ -254,58 +254,56 @@ export default function Dashboard() {
             </select>
           </div>
         </div>
+
         <DragDropContext onDragEnd={onDragEnd}>
           <Droppable droppableId="taskList">
-            {(provided: DroppableProvided): ReactNode => (
+            {(provided) => (
               <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-4">
-                {filteredTasks.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                    <p className="text-lg">No tasks found</p>
-                    <p className="text-sm mt-2">Try adjusting your filters or add a new task</p>
-                  </div>
-                ) : (
-                  filteredTasks.map((task, index) => (
-                    <Draggable key={task.id} draggableId={task.id} index={index}>
-                      {(provided: DraggableProvided, snapshot: DraggableStateSnapshot): ReactNode => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          className={`flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 transition-shadow ${snapshot.isDragging ? 'shadow-2xl' : ''}`}
-                        >
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-2">
-                              <h4 className="font-medium text-text-primary dark:text-white">{addEmojiToTitle(task.title)}</h4>
-                              <span className={`px-2 py-0.5 rounded-full text-xs ${
-                                task.priority === 'High' ? 'bg-danger text-white' :
-                                task.priority === 'Medium' ? 'bg-warning text-white' :
-                                'bg-success text-white'
-                              }`}>
-                                {task.priority}
-                              </span>
-                            </div>
-                            <p className="text-sm text-text-muted dark:text-gray-300 mt-1">{task.description}</p>
-                            <div className="flex items-center space-x-4 mt-2 text-sm text-text-secondary dark:text-gray-400">
-                              <span>Due: {new Date(task.dueDate).toLocaleDateString()}</span>
-                              {task.project && <span>Project: {task.project}</span>}
-                            </div>
+                {filteredTasks.map((task, index) => (
+                  <Draggable key={task.id} draggableId={task.id} index={index}>
+                    {(provided, snapshot) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        {...provided.dragHandleProps}
+                        className={`bg-white dark:bg-gray-700 shadow-lg rounded-lg p-4 border border-gray-200 dark:border-gray-600 transition-shadow ${
+                          snapshot.isDragging ? 'shadow-2xl' : ''
+                        }`}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h4 className="text-lg font-semibold text-text-primary dark:text-white">
+                              {addEmojiToTitle(task.title)}
+                            </h4>
+                            <p className="text-text-secondary dark:text-gray-300 mt-1">{task.description}</p>
                           </div>
                           <div className="flex items-center space-x-2">
+                            <span className={`px-2 py-1 rounded-full text-xs ${
+                              task.priority === 'High' ? 'bg-danger text-white' :
+                              task.priority === 'Medium' ? 'bg-warning text-white' :
+                              'bg-success text-white'
+                            }`}>
+                              {task.priority}
+                            </span>
                             <select
-                              className="border dark:border-gray-600 rounded-md px-2 py-1 text-sm bg-white dark:bg-gray-700 dark:text-white"
                               value={task.status}
                               onChange={(e) => updateTaskStatus(task.id, e.target.value as Task['status'])}
+                              className="border dark:border-gray-600 rounded-md px-2 py-1 text-sm text-text-secondary dark:text-gray-300 dark:bg-gray-700"
                             >
-                              <option value="Not Started">Not Started</option>
-                              <option value="In Progress">In Progress</option>
-                              <option value="Completed">Completed</option>
+                              <option>Not Started</option>
+                              <option>In Progress</option>
+                              <option>Completed</option>
                             </select>
                           </div>
                         </div>
-                      )}
-                    </Draggable>
-                  ))
-                )}
+                        <div className="mt-2 flex justify-between items-center text-sm text-text-muted dark:text-gray-400">
+                          <span>Due: {new Date(task.dueDate).toLocaleDateString()}</span>
+                          {task.project && <span>Project: {task.project}</span>}
+                        </div>
+                      </div>
+                    )}
+                  </Draggable>
+                ))}
                 {provided.placeholder}
               </div>
             )}
@@ -338,28 +336,26 @@ export default function Dashboard() {
                     rows={3}
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-text-secondary dark:text-gray-300 mb-1">Due Date</label>
-                    <input
-                      type="date"
-                      name="dueDate"
-                      className="w-full border dark:border-gray-600 rounded-md px-3 py-2 dark:bg-gray-700 dark:text-white"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-text-secondary dark:text-gray-300 mb-1">Priority</label>
-                    <select
-                      name="priority"
-                      className="w-full border dark:border-gray-600 rounded-md px-3 py-2 dark:bg-gray-700 dark:text-white"
-                      required
-                    >
-                      <option value="High">High</option>
-                      <option value="Medium">Medium</option>
-                      <option value="Low">Low</option>
-                    </select>
-                  </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary dark:text-gray-300 mb-1">Due Date</label>
+                  <input
+                    type="date"
+                    name="dueDate"
+                    className="w-full border dark:border-gray-600 rounded-md px-3 py-2 dark:bg-gray-700 dark:text-white"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary dark:text-gray-300 mb-1">Priority</label>
+                  <select
+                    name="priority"
+                    className="w-full border dark:border-gray-600 rounded-md px-3 py-2 dark:bg-gray-700 dark:text-white"
+                    required
+                  >
+                    <option value="High">High</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Low">Low</option>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-text-secondary dark:text-gray-300 mb-1">Project</label>
@@ -369,21 +365,21 @@ export default function Dashboard() {
                     className="w-full border dark:border-gray-600 rounded-md px-3 py-2 dark:bg-gray-700 dark:text-white"
                   />
                 </div>
-                <div className="flex justify-end space-x-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowAddTask(false)}
-                    className="px-4 py-2 text-sm font-medium text-text-secondary dark:text-gray-300 hover:text-text-primary dark:hover:text-white"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-secondary"
-                  >
-                    Add Task
-                  </button>
-                </div>
+              </div>
+              <div className="mt-6 flex justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setShowAddTask(false)}
+                  className="px-4 py-2 border dark:border-gray-600 rounded-md text-text-secondary dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-primary text-white rounded-md hover:bg-secondary"
+                >
+                  Add Task
+                </button>
               </div>
             </form>
           </div>
