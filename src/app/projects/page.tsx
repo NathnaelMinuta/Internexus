@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useLocalStorage } from '@/utils/useLocalStorage';
+import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 
 interface Project {
   id: string;
@@ -64,6 +65,15 @@ export default function Projects() {
     }
   };
 
+  // Handle drag end for reordering projects
+  const onDragEnd = (result: DropResult) => {
+    if (!result.destination) return;
+    const reordered = Array.from(projects);
+    const [removed] = reordered.splice(result.source.index, 1);
+    reordered.splice(result.destination.index, 0, removed);
+    setProjects(reordered);
+  };
+
   return (
     <div className="space-y-6">
       {/* Projects Header */}
@@ -73,61 +83,79 @@ export default function Projects() {
       </div>
 
       {/* Projects List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {projects.map(project => (
-          <div key={project.id} className="bg-white shadow-lg rounded-lg p-6 border border-gray-200">
-            <div className="flex justify-between items-start">
-              <h3 className="text-lg font-semibold text-text-primary">{project.title}</h3>
-              <span className={`px-2 py-1 text-white text-sm rounded-full ${
-                project.status === 'Not Started' ? 'bg-danger' :
-                project.status === 'In Progress' ? 'bg-warning' :
-                'bg-success'
-              }`}>{project.status}</span>
-            </div>
-            <p className="mt-2 text-text-secondary">{project.description}</p>
-            <div className="mt-4 flex justify-between items-center">
-              <span className="text-sm text-text-muted">Due: {new Date(project.dueDate).toLocaleDateString()}</span>
-              <div className="flex space-x-2">
+      <DragDropContext onDragEnd={onDragEnd}>
+        <Droppable droppableId="projectList" direction="horizontal">
+          {(provided) => (
+            <div
+              className="flex flex-wrap gap-6"
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+            >
+              {projects.map((project, index) => (
+                <Draggable key={project.id} draggableId={project.id} index={index}>
+                  {(provided, snapshot) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                      {...provided.dragHandleProps}
+                      className={`bg-white shadow-lg rounded-lg p-6 border border-gray-200 transition-shadow ${snapshot.isDragging ? 'shadow-2xl' : ''}`}
+                      style={{ minWidth: '300px', maxWidth: '350px', marginBottom: '0.5rem', ...provided.draggableProps.style }}
+                    >
+                      <div className="flex justify-between items-start">
+                        <h3 className="text-lg font-semibold text-text-primary">{project.title}</h3>
+                        <span className={`px-2 py-1 text-white text-sm rounded-full ${
+                          project.status === 'Not Started' ? 'bg-danger' :
+                          project.status === 'In Progress' ? 'bg-warning' :
+                          'bg-success'
+                        }`}>{project.status}</span>
+                      </div>
+                      <p className="mt-2 text-text-secondary">{project.description}</p>
+                      <span className="text-sm text-text-muted">Due: {new Date(project.dueDate).toLocaleDateString()}</span>
+                      <div className="flex space-x-2">
+                        <button 
+                          onClick={() => {
+                            setSelectedProject(project);
+                            setShowViewProject(true);
+                          }}
+                          className="text-primary hover:text-secondary"
+                        >
+                          View Details
+                        </button>
+                        <button 
+                          onClick={() => {
+                            setSelectedProject(project);
+                            setShowEditProject(true);
+                          }}
+                          className="text-warning hover:text-warning-dark"
+                        >
+                          Edit
+                        </button>
+                        <button 
+                          onClick={() => deleteProject(project.id)}
+                          className="text-danger hover:text-danger-dark"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </Draggable>
+              ))}
+              {/* Add Project Card (not draggable) */}
+              <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-200 flex items-center justify-center" style={{ minWidth: '300px', maxWidth: '350px', marginBottom: '0.5rem' }}>
                 <button 
-                  onClick={() => {
-                    setSelectedProject(project);
-                    setShowViewProject(true);
-                  }}
-                  className="text-primary hover:text-secondary"
+                  onClick={() => setShowAddProject(true)}
+                  className="text-primary hover:text-secondary flex items-center space-x-2"
                 >
-                  View Details
-                </button>
-                <button 
-                  onClick={() => {
-                    setSelectedProject(project);
-                    setShowEditProject(true);
-                  }}
-                  className="text-warning hover:text-warning-dark"
-                >
-                  Edit
-                </button>
-                <button 
-                  onClick={() => deleteProject(project.id)}
-                  className="text-danger hover:text-danger-dark"
-                >
-                  Delete
+                  <span className="text-2xl">+</span>
+                  <span>Add New Project</span>
                 </button>
               </div>
+              {provided.placeholder}
             </div>
-          </div>
-        ))}
-
-        {/* Add Project Card */}
-        <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-200 flex items-center justify-center">
-          <button 
-            onClick={() => setShowAddProject(true)}
-            className="text-primary hover:text-secondary flex items-center space-x-2"
-          >
-            <span className="text-2xl">+</span>
-            <span>Add New Project</span>
-          </button>
-        </div>
-      </div>
+          )}
+        </Droppable>
+      </DragDropContext>
 
       {/* View Project Modal */}
       {showViewProject && selectedProject && (

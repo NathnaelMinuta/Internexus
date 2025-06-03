@@ -6,6 +6,7 @@ export interface Notification {
   id: string;
   message: string;
   type: 'info' | 'warning' | 'danger';
+  duration?: number;
 }
 
 export function useNotifications() {
@@ -15,10 +16,10 @@ export function useNotifications() {
     const id = Date.now().toString();
     setNotifications(prev => [...prev, { ...notification, id }]);
 
-    // Auto-dismiss after 5 seconds
+    // Auto-dismiss after specified duration or default 5 seconds
     setTimeout(() => {
       removeNotification(id);
-    }, 5000);
+    }, notification.duration || 5000);
   };
 
   const removeNotification = (id: string) => {
