@@ -16,10 +16,15 @@ const nextConfig = {
   basePath: basePath,
   images: {
     unoptimized: true,
-    loader: 'custom',
-    path: '/Internexus'
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+    ],
   },
   trailingSlash: true,
+  distDir: 'out',
 }
 
 module.exports = nextConfig 
