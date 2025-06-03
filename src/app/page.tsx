@@ -5,7 +5,8 @@ import { useTheme } from 'next-themes';
 import Notifications, { useNotifications } from '@/components/Notifications';
 import { useLocalStorage } from '@/utils/useLocalStorage';
 import { FiSun, FiMoon } from 'react-icons/fi';
-import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable, Draggable, DropResult, DroppableProvided, DraggableProvided, DraggableStateSnapshot } from '@hello-pangea/dnd';
+import type { ReactNode } from 'react';
 
 interface Task {
   id: string;
@@ -255,7 +256,7 @@ export default function Dashboard() {
         </div>
         <DragDropContext onDragEnd={onDragEnd}>
           <Droppable droppableId="taskList">
-            {(provided) => (
+            {(provided: DroppableProvided): ReactNode => (
               <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-4">
                 {filteredTasks.length === 0 ? (
                   <div className="text-center py-8 text-gray-500 dark:text-gray-400">
@@ -265,7 +266,7 @@ export default function Dashboard() {
                 ) : (
                   filteredTasks.map((task, index) => (
                     <Draggable key={task.id} draggableId={task.id} index={index}>
-                      {(provided, snapshot) => (
+                      {(provided: DraggableProvided, snapshot: DraggableStateSnapshot): ReactNode => (
                         <div
                           ref={provided.innerRef}
                           {...provided.draggableProps}
