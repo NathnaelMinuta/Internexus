@@ -1,11 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'export',
+  basePath: '/Internexus',
   images: {
     unoptimized: true,
   },
-  basePath: '/Internexus',
-  assetPrefix: '/Internexus/',
   trailingSlash: true,
 }
 
